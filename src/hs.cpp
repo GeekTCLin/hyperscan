@@ -215,6 +215,7 @@ hs_compile_multi_int(const char *const *expressions, const unsigned *flags,
         return HS_COMPILER_ERROR;
     }
 
+    // 最大支持8M个模式
     if (elements > g.limitPatternCount) {
         *db = nullptr;
         *comp_error = generateCompileError("Number of patterns too large", -1);
@@ -230,9 +231,12 @@ hs_compile_multi_int(const char *const *expressions, const unsigned *flags,
                                     : get_current_target();
 
     try {
+        // 创建编译环境（保存下面会用到的各种配置）
+        // CompileContext 无实际方法，只是一个数据结构
         CompileContext cc(isStreaming, isVectored, target_info, g);
         NG ng(cc, elements, somPrecision);
-
+        
+        // 逐一添加规则
         for (unsigned int i = 0; i < elements; i++) {
             // Add this expression to the compiler
             try {

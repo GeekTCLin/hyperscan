@@ -245,36 +245,48 @@ template<typename Graph,
          typename EdgePropertyType = graph_detail::default_edge_property>
 class ue2_graph : graph_detail::graph_base {
 private:
+    // 为两种不同类型的边钩子创建唯一的类型标签，分别为入边和出边 line248-260
     struct in_edge_tag { };
     struct out_edge_tag { };
 
     struct vertex_node;
 
+    // 出边列表
     using out_edge_hook
        = boost::intrusive::list_base_hook<boost::intrusive::tag<out_edge_tag> >;
 
     /* in_edge_hook does not use safe mode as during graph destruction we do not
      * maintain the in edge lists */
+    // 入边列表
     using in_edge_hook
        = boost::intrusive::list_base_hook<boost::intrusive::tag<in_edge_tag>,
                    boost::intrusive::link_mode<boost::intrusive::normal_link> >;
 
+    // egde_node 表示图中的一条边，分边别继承自入边钩子和出边钩子
+    // 代表这条边可以被同时插入到入边列表和出边列表中
     struct edge_node : public out_edge_hook, public in_edge_hook {
         explicit edge_node(u64a serial_in) : serial(serial_in) { }
-
+        
+        // 边的源顶点和目标顶点
         vertex_node *source = nullptr;
         vertex_node *target = nullptr;
+
         const u64a serial; /*< used to order edges. We do not use props.index so
                             * that there is no danger of invalidating sets or
                             * other containers by changing the index due to
                             * renumbering */
+                            /* 用于对边排序。我们不使用props.index，
+                             * 这样就不会因为重新编号而改变索引，
+                             * 从而避免使集合或其他容器失效的危险 */
+
         EdgePropertyType props;
     };
 
     template<typename hook_type> using vertex_edge_list
         = boost::intrusive::list<edge_node,
                                  boost::intrusive::base_hook<hook_type> >;
-
+    
+    // vertex_node 表示图中的一个顶点
     struct vertex_node : public boost::intrusive::list_base_hook<> {
         explicit vertex_node(u64a serial_in) : serial(serial_in) { }
 
@@ -285,16 +297,18 @@ private:
                             * renumbering */
 
         /* The incoming edges are not considered owned by the vertex */
-        vertex_edge_list<in_edge_hook> in_edge_list;
+        vertex_edge_list<in_edge_hook> in_edge_list;        // 入边列表，不拥有边；由源顶点负责	记录哪些边指向本顶点
 
         /* The out going edges are considered owned by the vertex and
          * need to be freed when the graph is being destroyed */
-        vertex_edge_list<out_edge_hook> out_edge_list;
+        vertex_edge_list<out_edge_hook> out_edge_list;      // 出边列表，拥有边；本顶点负责清理	记录本顶点指向哪些其他顶点
 
         /* The destructor only frees memory owned by the vertex and will leave
          * the neighbour's edges in a bad state. If a vertex is being removed
          * (rather than the graph being destroyed), then the more gentle clean
          * up of clear_vertex() is required to be called first */
+
+        // 析构函数，清理出边列表
         ~vertex_node() {
             out_edge_list.clear_and_dispose(delete_disposer());
         }

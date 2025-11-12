@@ -37,6 +37,7 @@
 namespace ue2 {
 
 /** \brief Class that makes derived classes non-copyable.  */
+// 用继承的方式禁止拷贝构造和赋值操作
 struct noncopyable {
     noncopyable() = default;
     noncopyable(const noncopyable &) = delete;

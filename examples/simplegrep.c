@@ -150,6 +150,8 @@ int main(int argc, char *argv[]) {
         return -1;
     }
 
+    // pattern 匹配规则
+    // inputFN 输入文件名
     char *pattern = argv[1];
     char *inputFN = argv[2];
 

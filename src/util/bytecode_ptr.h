@@ -51,6 +51,8 @@ namespace ue2 {
  *
  * This is intended to be used for flat aligned memory regions that will
  * eventually end up copied into the Hyperscan bytecode.
+ * 
+ * 在unique_ptr的基础上增加了size和align属性，表示所管理内存块的大小和对齐方式
  */
 template<typename T>
 class bytecode_ptr : totally_ordered<bytecode_ptr<T>> {
@@ -131,8 +133,8 @@ private:
     };
 
     std::unique_ptr<T, deleter<T>> ptr; //!< Underlying pointer.
-    size_t bytes = 0; //!< Size of memory region in bytes.
-    size_t alignment = 0; //!< Alignment of memory region in bytes.
+    size_t bytes = 0; //!< Size of memory region in bytes.  使用的字节数
+    size_t alignment = 0; //!< Alignment of memory region in bytes. 对齐方式
 };
 
 /**
