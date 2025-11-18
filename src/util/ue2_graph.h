@@ -352,9 +352,11 @@ private:
                                     edge list */
 
     u64a next_serial = 0;
+    // 创建新序号
     u64a new_serial() {
         u64a serial = next_serial++;
         if (!next_serial) {
+            // next_serial == 0 溢出
             /* if we have created enough graph edges/vertices to overflow a u64a
              * we must have spent close to an eternity adding to this graph so
              * something must have gone very wrong and we will not be producing
@@ -542,6 +544,7 @@ public:
     static
     vertex_descriptor null_vertex() { return vertex_descriptor(); }
 
+    // 添加一个节点
     vertex_descriptor add_vertex_impl() {
         vertex_node *v = new vertex_node(new_serial());
         v->props.index = next_vertex_index++;
@@ -549,6 +552,8 @@ public:
         return vertex_descriptor(v);
     }
 
+    // 移除一个节点
+    // 移除节点需要先确保该节点没有任何入边和出边
     void remove_vertex_impl(vertex_descriptor v) {
         vertex_node *vv = v.raw();
         assert(vv->in_edge_list.empty());
@@ -626,8 +631,11 @@ public:
     /* AdjacencyMatrix concept functions
      * (Note: complexity guarantee is not met) */
 
+    // 在邻接矩阵表示的图中查找两个顶点之间边的功能
+    // 源顶点u和目标顶点v
     std::pair<edge_descriptor, bool> edge_impl(vertex_descriptor u,
                                                vertex_descriptor v) const {
+        // 选择度数较小的顶点进行遍历
         if (in_degree_impl(v) < out_degree_impl(u)) {
             for (const edge_descriptor &e : in_edges_range(v, *this)) {
                 if (source_impl(e) == u) {
@@ -641,7 +649,8 @@ public:
                 }
             }
         }
-
+        
+        // 未找到
         return {edge_descriptor(), false};
     }
 
@@ -660,6 +669,7 @@ public:
 
     /* MutableGraph concept functions */
 
+    // 在源节点u与目标节点v之间添加一条边
     std::pair<edge_descriptor, bool>
     add_edge_impl(vertex_descriptor u, vertex_descriptor v) {
         bool added = true; /* we always allow parallel edges */
@@ -675,6 +685,7 @@ public:
         return {edge_descriptor(e), added};
     }
 
+    // 移除一条边
     void remove_edge_impl(edge_descriptor e) {
         graph_edge_count--;
 
@@ -687,8 +698,10 @@ public:
         delete e.raw();
     }
 
+    // 从v节点移除满足pred谓条件的所有出边
     template<class Predicate>
     void remove_out_edge_if_impl(vertex_descriptor v, Predicate pred) {
+        // 获取v节点的所有出边迭代器范围
         out_edge_iterator it, ite;
         std::tie(it, ite) = out_edges_impl(v);
         while (it != ite) {

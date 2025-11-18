@@ -138,6 +138,7 @@ void upperString(string &s) {
     }
 }
 
+// nocase 是否区分大小写
 size_t maxStringOverlap(const string &a, const string &b, bool nocase) {
     size_t lena = a.length(), lenb = b.length();
     const char *astart = a.c_str();
